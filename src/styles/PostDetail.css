@@ -108,7 +108,7 @@
   font-size:1 rem;
 
 }
-.button-group-inline {
+.button-group {
   display: flex;
   gap: 10px;
   width:40%;
