@@ -29,7 +29,7 @@ const PostDetail = () => {
           if (!response.ok) throw new Error("Failed to fetch post");
 
           const apiPost = await response.json();
-          setPost({ ...apiPost, comments: [] }); // Initialize empty comments
+          setPost({ ...apiPost, comments: [], tags: [] }); // Initialize empty comments and tags
 
           // Fetch comments for the API post
           const commentsResponse = await fetch(
@@ -81,34 +81,52 @@ const PostDetail = () => {
 
   return (
     <div className="post-detail">
-      <h1>{post.title}</h1>
-      <div className="paragraph">
-      <p>{post.body}</p>
-      <div className="button-group">
-        <button  className="edit-button" onClick={() => navigate(`/posts/${id}/edit`)}>Edit</button>
-        <button className="delete-button" onClick={handleDelete}>
-          Delete
-        </button>
-      </div>
-      </div>
+      {post && (
+        <>
+          <h1>{post.title}</h1>
+          {post.tags && post.tags.length > 0 && (
+            <div className="post-tags">
+              {post.tags.map((tag, index) => (
+                <span key={index} className="post-tag">
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
+          <div className="paragraph">
+            <p>{post.body}</p>
+            <div className="button-group">
+              <button
+                className="edit-button"
+                onClick={() => navigate(`/posts/${id}/edit`)}
+              >
+                Edit
+              </button>
+              <button className="delete-button" onClick={handleDelete}>
+                Delete
+              </button>
+            </div>
+          </div>
 
-      <h2>Comments</h2>
-      <ul>
-        {comments.map((comment, index) => (
-          <li key={index}>
-            <p>{comment.body || comment.text}</p>
-          </li>
-        ))}
-      </ul>
-      <div className="comment-input">
-        <input
-          type="text"
-          value={newComment}
-          onChange={(e) => setNewComment(e.target.value)}
-          placeholder="Add a comment"
-        />
-        <button onClick={handleAddComment}>Add Comment</button>
-      </div>
+          <h2>Comments</h2>
+          <ul>
+            {comments.map((comment, index) => (
+              <li key={index}>
+                <p>{comment.body || comment.text}</p>
+              </li>
+            ))}
+          </ul>
+          <div className="comment-input">
+            <input
+              type="text"
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              placeholder="Add a comment"
+            />
+            <button onClick={handleAddComment}>Add Comment</button>
+          </div>
+        </>
+      )}
     </div>
   );
 };

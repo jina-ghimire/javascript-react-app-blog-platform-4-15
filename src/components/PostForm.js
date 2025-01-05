@@ -7,6 +7,7 @@ const PostForm = ({ isEdit = false }) => {
   const [body, setBody] = useState("");
   const [tags, setTags] = useState([]);
   const [newTag, setNewTag] = useState("");
+  const [comments, setComments] = useState([]);
   const navigate = useNavigate();
   const { id } = useParams();
 
@@ -14,70 +15,84 @@ const PostForm = ({ isEdit = false }) => {
     if (isEdit) {
       const posts = JSON.parse(localStorage.getItem("posts")) || [];
       const postFromStorage = posts.find((post) => post.id === Number(id));
-  
+
       if (postFromStorage) {
         // Load post from localStorage
         setTitle(postFromStorage.title || "");
         setShortDescription(postFromStorage.shortDescription || "");
         setBody(postFromStorage.body || "");
         setTags(postFromStorage.tags || []); // Load tags
+        setComments(postFromStorage.comments || []); // Load comments
       } else {
         // Load post from API
         const fetchPost = async () => {
           try {
-            const response = await fetch(`https://jsonplaceholder.typicode.com/posts/${id}`);
+            const response = await fetch(
+              `https://jsonplaceholder.typicode.com/posts/${id}`
+            );
             if (!response.ok) throw new Error("Failed to fetch post");
             const apiPost = await response.json();
             setTitle(apiPost.title || "");
             setShortDescription(apiPost.body.substring(0, 50) || "");
             setBody(apiPost.body || "");
             setTags([]); // Default empty tags for API posts
+
+            // Fetch comments for API posts
+            const commentsResponse = await fetch(
+              `https://jsonplaceholder.typicode.com/comments?postId=${id}`
+            );
+            if (commentsResponse.ok) {
+              const apiComments = await commentsResponse.json();
+              setComments(apiComments); // Set comments fetched from API
+            } else {
+              setComments([]); // Default to empty comments if fetch fails
+            }
           } catch (error) {
             console.error("Error fetching post from API:", error);
           }
         };
-  
+
         fetchPost();
       }
     }
   }, [id, isEdit]);
-  
-  
+
   const generateUniqueId = (posts) => {
     const maxExistingId = Math.max(0, ...posts.map((post) => post.id));
     return maxExistingId + 1;
   };
-  
+
   const handleSubmit = (e) => {
     e.preventDefault();
-  
-    console.log("Tags before submit:", tags); // Check tags before submitting
-  
+
+    console.log("Tags before submit:", tags); // Debugging
+    console.log("Comments before submit:", comments); // Debugging
+
     const posts = JSON.parse(localStorage.getItem("posts")) || [];
     const newId = isEdit ? Number(id) : generateUniqueId(posts);
-  
+
     const newPost = {
       id: newId,
       title,
       shortDescription,
       body,
       tags, // Include updated tags here
+      comments, // Preserve comments during edit
     };
-  
+
     console.log("New post object being saved:", newPost); // Debugging
-  
+
     const isApiPost = !posts.find((post) => post.id === Number(id));
     const updatedPosts = isEdit
       ? isApiPost
         ? [newPost, ...posts]
         : posts.map((post) => (post.id === Number(id) ? newPost : post))
       : [newPost, ...posts];
-  
+
     localStorage.setItem("posts", JSON.stringify(updatedPosts));
     console.log("Updated Posts in LocalStorage:", updatedPosts); // Debugging
     navigate("/posts");
   };
-  
 
   const handleAddTag = () => {
     console.log("New tag input:", newTag); // Debugging
@@ -90,8 +105,6 @@ const PostForm = ({ isEdit = false }) => {
       alert("Tag is either empty or already exists.");
     }
   };
-  
-  
 
   const handleDeleteTag = (tagToDelete) => {
     setTags(tags.filter((tag) => tag !== tagToDelete));
@@ -144,21 +157,20 @@ const PostForm = ({ isEdit = false }) => {
               </button>
             </div>
           ))}
-        <div className="tag-input">
-  <input
-    type="text"
-    value={newTag}
-    onChange={(e) => {
-      setNewTag(e.target.value);
-      console.log("New tag input value:", e.target.value); // Debugging
-    }}
-    placeholder="Tag"
-  />
-  <button type="button" onClick={handleAddTag} className="add-tag">
-    Add Tag
-  </button>
-</div>
-
+          <div className="tag-input">
+            <input
+              type="text"
+              value={newTag}
+              onChange={(e) => {
+                setNewTag(e.target.value);
+                console.log("New tag input value:", e.target.value); // Debugging
+              }}
+              placeholder="Tag"
+            />
+            <button type="button" onClick={handleAddTag} className="add-tag">
+              Add Tag
+            </button>
+          </div>
         </div>
       </div>
       <div className="button-group">
